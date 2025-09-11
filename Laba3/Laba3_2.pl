@@ -1,15 +1,8 @@
-# ==============================
-# ГЛОБАЛЬНАЯ ПЕРЕМЕННАЯ
-# ==============================
+my $root;   
 
-my $root;   # корень бинарного дерева поиска (изначально пустой = undef)
 
-# ==============================
-# ОСНОВНОЙ ЦИКЛ МЕНЮ
-# ==============================
-
-while (1) {                                # бесконечный цикл (будет работать, пока не выберем "Выход")
-    print "\nМеню:\n";                     # печатаем меню
+while (1) {                                
+    print "\nМеню:\n";                     
     print "1. Сгенерировать дерево случайных чисел\n";
     print "2. Добавить элемент\n";
     print "3. Вывести дерево (структура)\n";
@@ -18,187 +11,184 @@ while (1) {                                # бесконечный цикл (б
     print "6. Выход\n";
     print "Ваш выбор: ";
 
-    chomp(my $choice = <> );               # читаем ввод пользователя, убираем символ перевода строки
+    chomp(my $choice = <> );              
 
-    if ($choice eq '1') {                  # пункт 1 — генерация случайного дерева
+    if ($choice eq '1') {                  
         print "Сколько чисел сгенерировать? ";
-        chomp(my $n = <>);                 # читаем количество чисел
-
-        $root = undef;                     # очищаем дерево (делаем пустым)
-        for (1 .. $n) {                    # повторяем n раз
-            my $val = int(rand(100));      # генерируем случайное число от 0 до 99
-            insert(\$root, $val);          # вставляем его в дерево
+        chomp(my $n = <>);                 
+        $root = undef;                    
+        for (1 .. $n) {                    
+            my $val = int(rand(100));      
+            insert(\$root, $val);          
         }
         print "Дерево сгенерировано.\n";
     }
-    elsif ($choice eq '2') {               # пункт 2 — добавление элемента вручную
+    elsif ($choice eq '2') {              
         print "Введите число: ";
-        chomp(my $val = <>);               # читаем число пользователя
+        chomp(my $val = <>);             
 
-        insert(\$root, $val);              # вставляем его в дерево
+        insert(\$root, $val);            
 
         print "Элемент $val добавлен.\n";
     }
-    elsif ($choice eq '3') {               # пункт 3 — вывод дерева структурой (боком)
-        if ($root) {                       # если дерево не пустое
-            print "\nСтруктура дерева:\n";
-            print_tree($root, "", 0);      # печатаем дерево рекурсивно
-        } else {
-            print "Дерево пустое.\n";
-        }
+    elsif ($choice eq '3') {  
+    if ($root) {
+        print "\nГрафическое представление дерева:\n";
+        print_tree_graphic($root);
+    } else {
+        print "Дерево пустое.\n";
     }
-    elsif ($choice eq '4') {               # пункт 4 — вывод дерева по уровням
+}
+    elsif ($choice eq '4') {             
         if ($root) {
             print "\nДерево по уровням:\n";
-            print_tree_levels($root);      # печатаем дерево уровнями
+            print_tree_levels($root);     
         } else {
             print "Дерево пустое.\n";
         }
     }
-    elsif ($choice eq '5') {               # пункт 5 — удаление элемента
+    elsif ($choice eq '5') {             
         print "Введите число для удаления: ";
-        chomp(my $val = <> // '');         # читаем число (если пусто, то '')
+        chomp(my $val = <> // '');        
 
-        if (delete_node(\$root, $val)) {   # пробуем удалить
+        if (delete_node(\$root, $val)) {  
             print "Элемент $val удалён.\n";
         } else {
             print "Элемент $val не найден.\n";
         }
     }
-    elsif ($choice eq '6') {               # пункт 6 — выход
-        last;                              # прерываем цикл → завершаем программу
+    elsif ($choice eq '6') {              
+        last;                             
     }
     else {
-        print "Неверный выбор!\n";         # обработка ошибки ввода
+        print "Неверный выбор!\n";        
     }
 }
 
-# ==============================
-# ФУНКЦИИ ДЛЯ ДЕРЕВА
-# ==============================
-
-# ---------- Вставка ----------
-# insert(\$node, $val)
-# $node — ссылка на "ячейку" (undef или хеш-узел)
-# $val  — число для вставки
 sub insert {
-    my ($ref, $val) = @_;                  # получаем ссылку на узел и значение
+    my ($ref, $val) = @_;                
 
-    unless ($$ref) {                       # если текущая ячейка пустая
-        $$ref = { VALUE => $val,           # создаём новый узел: значение + пустые потомки
+    unless ($$ref) {                       
+        $$ref = { VALUE => $val,          
                    LEFT => undef,
                    RIGHT => undef };
-        return 1;                          # вставка прошла успешно
+        return 1;                         
     }
 
-    if ($val == $$ref->{VALUE}) {          # если элемент уже существует
-        warn "Элемент $val уже есть!\n";   # предупреждаем
-        return 0;                          # не вставляем дубликаты
+    if ($val == $$ref->{VALUE}) {         
+        warn "Элемент $val уже есть!\n";   
+        return 0;                          
     }
-    elsif ($val < $$ref->{VALUE}) {        # если значение меньше текущего
-        # рекурсивно вставляем в ЛЕВОЕ поддерево
+    elsif ($val < $$ref->{VALUE}) {        
         return insert(\($$ref->{LEFT}), $val);
     }
-    else {                                 # если значение больше
-        # рекурсивно вставляем в ПРАВОЕ поддерево
+    else {                                 
         return insert(\($$ref->{RIGHT}), $val);
     }
 }
 
-# ---------- Красивый вывод ----------
-# print_tree($node, $prefix, $is_left)
-# Рекурсивно рисует дерево "боком"
-sub print_tree {
-    my ($node, $prefix, $is_left) = @_;
-    return unless $node;                   # если узла нет → выходим
+sub print_tree_graphic {
+    my ($root) = @_;
+    return print "Дерево пустое.\n" unless $root;
 
-    # Сначала печатаем правое поддерево
-    if ($node->{RIGHT}) {
-        print_tree($node->{RIGHT}, $prefix . ($is_left ? "│   " : "    "), 0);
+    my @levels = ([$root]);
+    my $max_depth = tree_depth($root);
+
+    for my $d (1 .. $max_depth-1) {
+        my @prev = @{ $levels[-1] };
+        my @curr;
+        for my $node (@prev) {
+            if ($node) {
+                push @curr, $node->{LEFT}, $node->{RIGHT};
+            } else {
+                push @curr, undef, undef;
+            }
+        }
+        push @levels, \@curr;
     }
 
-    # Потом печатаем сам узел
-    print $prefix;                         # выводим отступ
-    print($is_left ? "└── " : "┌── ");     # рисуем "ветку" (слева/справа)
-    print $node->{VALUE} . "\n";           # значение узла
+    my $max_width = 2**$max_depth; 
+    for my $i (0 .. $#levels) {
+        my $spacing = $max_width / (2**($i+1)); 
+        my $line = "";
 
-    # В конце печатаем левое поддерево
-    if ($node->{LEFT}) {
-        print_tree($node->{LEFT}, $prefix . ($is_left ? "    " : "│   "), 1);
+        foreach my $node (@{ $levels[$i] }) {
+            $line .= " " x $spacing;
+            if ($node) {
+                $line .= $node->{VALUE};
+            } else {
+                $line .= " ";
+            }
+            $line .= " " x $spacing;
+        }
+        print "$line\n\n";
     }
 }
 
-# ---------- Высота дерева ----------
-sub tree_height {
+sub tree_depth {
     my ($node) = @_;
-    return 0 unless $node;                 # пустое дерево = высота 0
-    # рекурсивно вычисляем высоту:
-    # 1 (текущий узел) + макс(высота левого, высота правого)
-    return 1 + max(tree_height($node->{LEFT}), tree_height($node->{RIGHT}));
+    return 0 unless $node;
+    my $l = tree_depth($node->{LEFT});
+    my $r = tree_depth($node->{RIGHT});
+    return 1 + ($l > $r ? $l : $r);
 }
 
-# ---------- Сбор значений по уровням ----------
 sub collect_levels {
     my ($node, $level, $levels) = @_;
-    return unless $node;                   # если узла нет → выходим
+    return unless $node;                   
 
-    push @{ $levels->[$level] }, $node->{VALUE}; # добавляем значение в массив соответствующего уровня
+    push @{ $levels->[$level] }, $node->{VALUE}; 
 
-    collect_levels($node->{LEFT},  $level + 1, $levels);  # рекурсивно идём влево, увеличивая уровень
-    collect_levels($node->{RIGHT}, $level + 1, $levels);  # рекурсивно идём вправо
+    collect_levels($node->{LEFT},  $level + 1, $levels); 
+    collect_levels($node->{RIGHT}, $level + 1, $levels);  
 }
 
-# ---------- Печать по уровням ----------
 sub print_tree_levels {
     my ($root) = @_;
-    return print "Дерево пустое.\n" unless $root; # если пустое
+    return print "Дерево пустое.\n" unless $root; 
 
-    my $h = tree_height($root);            # вычисляем высоту (инфо, можно не использовать)
-    my @levels;                            # массив уровней
-    collect_levels($root, 0, \@levels);    # собираем значения по уровням
+    my @levels;                          
+    collect_levels($root, 0, \@levels);  
 
-    for my $i (0..$#levels) {              # печатаем все уровни
+    for my $i (0..$#levels) {             
         print "Уровень $i: ";
         print join("  ", @{ $levels[$i] });
         print "\n";
     }
 }
 
-# ---------- Удаление ----------
 sub delete_node {
     my ($ref, $val) = @_;
-    return 0 unless $$ref;                 # если узел пустой → не нашли элемент
+    return 0 unless $$ref;               
 
-    if ($val < $$ref->{VALUE}) {           # если меньше → ищем в левом поддереве
+    if ($val < $$ref->{VALUE}) {          
         return delete_node(\($$ref->{LEFT}), $val);
     }
-    elsif ($val > $$ref->{VALUE}) {        # если больше → в правом поддереве
+    elsif ($val > $$ref->{VALUE}) {        
         return delete_node(\($$ref->{RIGHT}), $val);
     }
-    else {                                 # нашли нужный узел
-        if (!$$ref->{LEFT} && !$$ref->{RIGHT}) {    # случай 1: лист
-            $$ref = undef;                 # просто удаляем
+    else {                               
+        if (!$$ref->{LEFT} && !$$ref->{RIGHT}) {    
+            $$ref = undef;               
         }
-        elsif (!$$ref->{LEFT}) {           # случай 2: есть только ПРАВЫЙ потомок
-            $$ref = $$ref->{RIGHT};        # заменяем узел правым
+        elsif (!$$ref->{LEFT}) {          
+            $$ref = $$ref->{RIGHT};       
         }
-        elsif (!$$ref->{RIGHT}) {          # случай 3: есть только ЛЕВЫЙ потомок
-            $$ref = $$ref->{LEFT};         # заменяем узел левым
+        elsif (!$$ref->{RIGHT}) {          
+            $$ref = $$ref->{LEFT};        
         }
-        else {                             # случай 4: два потомка
-            # ищем минимальное значение в правом поддереве
+        else {                           
             my $min_ref = min_ref(\($$ref->{RIGHT}));
-            $$ref->{VALUE} = $$min_ref;    # заменяем значение текущего узла
-            # рекурсивно удаляем этот минимальный элемент в правом поддереве
+            $$ref->{VALUE} = $$min_ref;  
+
             delete_node(\($$ref->{RIGHT}), $$min_ref);
         }
-        return 1;                          # элемент удалён
+        return 1;                          
     }
 }
 
-# ---------- Минимальный элемент ----------
 sub min_ref {
     my ($ref) = @_;
-    return $ref unless $$ref->{LEFT};      # если нет левого → нашли минимум
-    return min_ref(\($$ref->{LEFT}));      # иначе рекурсивно идём влево
+    return $ref unless $$ref->{LEFT};      
+    return min_ref(\($$ref->{LEFT}));    
 }

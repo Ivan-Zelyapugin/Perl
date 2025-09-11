@@ -144,10 +144,34 @@ sub list_print_all {
 
     my @headers = ("ФИО", "Зачетка", "Группа", "Специальность", "Дата рожд."); 
     my @lengths = (3, 7, 6, 12, 10); 
-
     my @rows;                          
-    my $node = $head;                  
-    while ($node) {
+
+    # Вызываем рекурсию для сбора данных
+    collect_rows($head, \@rows, \@lengths);
+
+    # Формируем строку формата для printf
+    my $fmt = join(" | ", map { "%-${_}s" } @lengths) . "\n";
+
+    # Выводим заголовки
+    printf $fmt, @headers;
+
+    # Выводим разделительную линию
+    my $total_len = 0;
+    $total_len += $_ + 3 for @lengths;   
+    print "-" x $total_len, "\n";
+
+    # Выводим строки данных
+    for my $row (@rows) {
+        printf $fmt, @$row;
+    }
+}
+
+# Рекурсивная функция для сбора данных
+    sub collect_rows {
+        my ($node, $rows_ref, $lengths_ref) = @_;
+        return unless $node;  # Базовый случай: если узел пустой, прекращаем рекурсию
+
+        # Собираем данные текущего узла
         my @row = (
             $node->{FIO},
             $node->{ZACH},
@@ -155,24 +179,14 @@ sub list_print_all {
             $node->{SPEC},
             $node->{DOB},
         );
-        push @rows, \@row;
-      
+        push @$rows_ref, \@row;
+
+        # Обновляем максимальные длины полей
         for my $i (0..4) {
             my $len = length($row[$i]);
-            $lengths[$i] = $len if $len > $lengths[$i];
+            $lengths_ref->[$i] = $len if $len > $lengths_ref->[$i];
         }
-        $node = $node->{NEXT};      
+
+        # Рекурсивный вызов для следующего узла
+        collect_rows($node->{NEXT}, $rows_ref, $lengths_ref);
     }
-
-    my $fmt = join(" | ", map { "%-${_}s" } @lengths) . "\n";
-
-    printf $fmt, @headers;
-
-    my $total_len = 0;
-    $total_len += $_ + 3 for @lengths;   
-    print "-" x $total_len, "\n";
-
-    for my $row (@rows) {
-        printf $fmt, @$row;
-    }
-}

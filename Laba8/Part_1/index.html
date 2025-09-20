@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Пример формы на HTML</title>
+</head>
+<body>
+    <h2>Цветовое тестирование</h2>
+    <form action="/cgi-bin/formobr.pl" method="POST">
+        <pre>
+Задайте свое имя: <input type="text" name="regname">
+Введите пароль: <input type="password" name="password1" maxlength="8">
+        </pre>
+        Ваша кожа имеет оттенок:<br>
+        <input type="radio" name="skin" value="rose" checked> нежно-розовый<br>
+        <input type="radio" name="skin" value="pale"> бледный<br>
+        <input type="radio" name="skin" value="dotted"> розоватый, есть веснушки<br>
+        <input type="radio" name="skin" value="dark"> смуглый<br><br>
+
+        Выберите цвет волос:<br>
+        <select name="hair" size="6">
+            <option selected value="golden_blonde">золотистый блондин</option>
+            <option value="ash_blonde">пепельный блондин</option>
+            <option value="brown">русый</option>
+            <option value="redish">рыжий</option>
+            <option value="darkbrown">шатен</option>
+            <option value="black">брюнет</option>
+        </select><br><br>
+
+        <input type="submit" value="OK">
+        <input type="reset" value="Отменить">
+    </form>
+</body>
+</html>

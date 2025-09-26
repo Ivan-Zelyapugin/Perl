@@ -1,7 +1,13 @@
 #!/usr/bin/perl
 use strict;
 use warnings;
+use utf8;                          # исходник скрипта в UTF-8
+use open qw(:std :encoding(UTF-8));# STDIN/STDOUT/STDERR в UTF-8
+use Encode::Locale;                # чтобы корректно декодировать @ARGV по локали
 use File::Find;
+
+# декодируем аргументы командной строки в "широкие" строки Perl
+Encode::Locale::decode_argv();
 
 # Проверка аргументов
 if (@ARGV < 2) {
@@ -9,46 +15,45 @@ if (@ARGV < 2) {
         "  где [i] - необязательный флаг, означающий поиск без учета регистра\n";
 }
 
-my $root_dir = shift @ARGV;        # Корень дерева каталогов
-my $pattern  = shift @ARGV;        # Последовательность для поиска
-my $ignore_case = shift @ARGV;     # Режим регистра (i - без учета регистра)
+my $root_dir    = shift @ARGV;
+my $pattern     = shift @ARGV;
+my $ignore_case = shift @ARGV // '';
 
-# Формируем регулярное выражение
+# Компилируем регулярное выражение (с проверкой на синтаксис)
 my $regex;
-if (defined $ignore_case && $ignore_case eq 'i') {
-    $regex = qr/$pattern/i;
-} else {
-    $regex = qr/$pattern/;
+eval {
+    $regex = ($ignore_case eq 'i') ? qr/$pattern/i : qr/$pattern/;
+};
+if ($@) {
+    die "Некорректный шаблон регулярного выражения: $@\n";
 }
 
-# Хэш для отчета: имя файла -> количество совпадений
 my %report;
 
-# Рекурсивный обход каталогов
 find(\&process_file, $root_dir);
 
-# Вывод отчета
 print "=== Отчет по файлам ===\n";
 foreach my $file (sort keys %report) {
     print "$file : $report{$file}\n";
 }
 
-# ---- Подпрограмма обработки файла ----
 sub process_file {
-    return if -d $_;  # Пропускаем каталоги
+    return if -d $_;  # пропускаем каталоги
 
     my $file = $File::Find::name;
     my $count = 0;
 
-    # Открываем файл в безопасном режиме
-    open my $fh, "<", $file or return;
+    # Открываем файл, явно указывая декодирование из UTF-8.
+    # Если ваши файлы в CP1251, замените 'UTF-8' на 'CP1251' (см. ниже).
+    open my $fh, '<:encoding(UTF-8)', $file or return;
 
     while (my $line = <$fh>) {
-        my @matches = ($line =~ /$regex/g);  # Глобальный поиск
-        $count += scalar @matches if @matches;
+        # считаем все вхождения
+        while ($line =~ /$regex/g) {
+            $count++;
+        }
     }
     close $fh;
 
-    # Если были совпадения – заносим в отчет
     $report{$file} = $count if $count > 0;
 }
